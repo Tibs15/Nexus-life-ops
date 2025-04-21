@@ -1,1 +1,58 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nexus Life Ops</title>
+  <style>
+    body {
+      background: #000;
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 0.5em;
+    }
+    .solde {
+      font-size: 3em;
+      margin-bottom: 1em;
+    }
+    button {
+      background: #0f0;
+      color: #000;
+      border: none;
+      padding: 0.8em 1.5em;
+      font-size: 1.2em;
+      cursor: pointer;
+      border-radius: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h1>NEXUS LIFE OPS</h1>
+  <div class="solde" id="solde">Chargement...</div>
+  <button onclick="effectuerVirement()">Virement</button>
 
+  <script>
+    // Simulation de solde brut réel
+    const soldeBrut = 128340.78;
+
+    document.getElementById("solde").innerText = soldeBrut.toLocaleString("fr-FR", {
+      style: "currency",
+      currency: "EUR",
+    });
+
+    function effectuerVirement() {
+      alert("Virement déclenché vers Qg Binance / Wise !");
+    }
+  </script>
+</body>
+</html>
