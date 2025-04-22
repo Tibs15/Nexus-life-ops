@@ -1,54 +1,109 @@
-name: Build Android APK
+// .github/workflows/android.yml name: Build Android APK
 
-on:
-  push:
-    branches: [ main ]
+on: push: branches: [ main ]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      ANDROID_SDK_ROOT: ${{ runner.tool_cache }}/android-sdk
+jobs: build: name: Génération APK Release runs-on: ubuntu-latest
 
-    steps:
-      - name: Récupérer le code
-        uses: actions/checkout@v3
+env:
+  ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
 
-      - name: Installer Java 11
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '11'
+steps:
+  - name: Checkout repo
+    uses: actions/checkout@v3
 
-      - name: Installer Android SDK
-        run: |
-          sudo mkdir -p $ANDROID_SDK_ROOT
-          sudo chown $USER:$USER $ANDROID_SDK_ROOT
-          cd $ANDROID_SDK_ROOT
-          wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-          unzip tools.zip -d cmdline-tools
-          rm tools.zip
-          yes | cmdline-tools/tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
-            "platform-tools" "platforms;android-31" "build-tools;31.0.0"
+  - name: Set up JDK 11
+    uses: actions/setup-java@v3
+    with:
+      distribution: temurin
+      java-version: '11'
 
-      - name: Mettre en cache Gradle
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.gradle/caches
-            ~/.gradle/wrapper
-          key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
-          restore-keys: |
-            ${{ runner.os }}-gradle-
+  - name: Install Android SDK
+    run: |
+      mkdir -p $ANDROID_SDK_ROOT
+      cd $ANDROID_SDK_ROOT
+      wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
+      unzip tools.zip -d cmdline-tools
+      rm tools.zip
+      yes | cmdline-tools/tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
+        "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
-      - name: Installer dépendances Node.js
-        run: npm install
+  - name: Cache Gradle
+    uses: actions/cache@v3
+    with:
+      path: |
+        ~/.gradle/caches
+        ~/.gradle/wrapper
+      key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+      restore-keys: |
+        ${{ runner.os }}-gradle-
 
-      - name: Générer l'APK Release
-        run: npx react-native run-android --variant=release
+  - name: Install Node.js dependencies
+    run: npm install
 
-      - name: Publier l’APK en artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: app-release.apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+  - name: Build Release APK
+    run: npx react-native run-android --variant=release
+
+  - name: Upload APK artifact
+    uses: actions/upload-artifact@v3
+    with:
+      name: app-release.apk
+      path: android/app/build/outputs/apk/release/app-release.apk
+
+// Package.json { "name": "nexus-life-ops", "version": "1.0.0", "private": true, "scripts": { "start": "react-native start", "android": "react-native run-android", "ios": "react-native run-ios" }, "dependencies": { "@react-navigation/native": "^6.0.0", "@react-navigation/native-stack": "^6.0.0", "react": "17.0.2", "react-native": "0.68.0", "react-native-async-storage/async-storage": "^1.15.0", "react-native-safe-area-context": "^3.3.2", "react-native-screens": "^3.4.0", "axios": "^0.21.1" } }
+
+// App.js import React from 'react'; import { NavigationContainer } from '@react-navigation/native'; import { createNativeStackNavigator } from '@react-navigation/native-stack'; import DashboardScreen from './screens/DashboardScreen'; import TransfersScreen from './screens/TransfersScreen'; import CampaignsScreen from './screens/CampaignsScreen'; import ServersScreen from './screens/ServersScreen';
+
+const Stack = createNativeStackNavigator();
+
+export default function App() { return ( <NavigationContainer> <Stack.Navigator initialRouteName="Dashboard"> <Stack.Screen name="Dashboard" component={DashboardScreen} /> <Stack.Screen name="Transfers" component={TransfersScreen} /> <Stack.Screen name="Campaigns" component={CampaignsScreen} /> <Stack.Screen name="Servers" component={ServersScreen} /> </Stack.Navigator> </NavigationContainer> ); }
+
+// screens/DashboardScreen.js import React, { useEffect, useState } from 'react'; import { View, Text, Button, StyleSheet, ScrollView } from 'react-native'; import axios from 'axios';
+
+export default function DashboardScreen({ navigation }) { const [data, setData] = useState(null);
+
+useEffect(() => { fetchOverview(); }, []);
+
+const fetchOverview = async () => { try { const res = await axios.get('https://api.nexuslifeops.com/overview'); setData(res.data); } catch (err) { console.error(err); } };
+
+return ( <ScrollView contentContainerStyle={styles.container}> <Text style={styles.title}>Nexus Life Ops</Text> {data ? ( <> <Text>Objectif: {data.target} €</Text> <Text>Progression: {data.progress}%</Text> <Text>Solde brut: {data.balance_gross} €</Text> <Text>Solde net: {data.balance_net} €</Text> </> ) : ( <Text>Chargement...</Text> )} <View style={styles.buttons}> <Button title="Virements" onPress={() => navigation.navigate('Transfers')} /> <Button title="Campagnes" onPress={() => navigation.navigate('Campaigns')} /> <Button title="Serveurs" onPress={() => navigation.navigate('Servers')} /> </View> </ScrollView> ); }
+
+const styles = StyleSheet.create({ container: { padding: 16 }, title: { fontSize: 24, marginBottom: 16 }, buttons: { marginTop: 24, flexDirection: 'row', justifyContent: 'space-around' } });
+
+// screens/TransfersScreen.js import React, { useEffect, useState } from 'react'; import { View, Text, Button, TextInput, StyleSheet, FlatList } from 'react-native'; import axios from 'axios';
+
+export default function TransfersScreen() { const [transfers, setTransfers] = useState([]); const [amount, setAmount] = useState(''); const [iban, setIban] = useState('');
+
+useEffect(() => { fetchTransfers(); }, []);
+
+const fetchTransfers = async () => { const res = await axios.get('https://api.nexuslifeops.com/transfers'); setTransfers(res.data); }; const createTransfer = async () => { await axios.post('https://api.nexuslifeops.com/transfers', { amount, iban }); fetchTransfers(); };
+
+return ( <View style={styles.container}> <Text style={styles.title}>Virements</Text> <TextInput style={styles.input} placeholder="Montant" value={amount} onChangeText={setAmount} keyboardType="numeric" /> <TextInput style={styles.input} placeholder="IBAN" value={iban} onChangeText={setIban} /> <Button title="Envoyer" onPress={createTransfer} /> <FlatList data={transfers} keyExtractor={item => item.id.toString()} renderItem={({ item }) => (<View style={styles.item}><Text>{item.date}: {item.amount} € - {item.status}</Text></View>)} /> </View> ); }
+
+const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, input: { borderWidth: 1, padding: 8, marginVertical: 8, borderRadius: 4 }, item: { marginVertical: 8 } });
+
+// screens/CampaignsScreen.js import React, { useEffect, useState } from 'react'; import { View, Text, Button, StyleSheet, FlatList } from 'react-native'; import axios from 'axios';
+
+export default function CampaignsScreen() { const [campaigns, setCampaigns] = useState([]);
+
+useEffect(() => { fetchCampaigns(); }, []);
+
+const fetchCampaigns = async () => { const res = await axios.get('https://api.nexuslifeops.com/campaigns'); setCampaigns(res.data); }; const runCampaign = async (id) => { await axios.post(https://api.nexuslifeops.com/campaigns/${id}/run); fetchCampaigns(); };
+
+return ( <View style={styles.container}> <Text style={styles.title}>Campagnes</Text> <FlatList data={campaigns} keyExtractor={item => item.id.toString()} renderItem={({ item }) => (<View style={styles.item}><Text>{item.name} - Status: {item.status}</Text><Button title="Lancer" onPress={() => runCampaign(item.id)} /></View>)} /> </View> ); }
+
+const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, item: { marginVertical: 8 } });
+
+// screens/ServersScreen.js import React, { useEffect, useState } from 'react'; import { View, Text, Switch, StyleSheet } from 'react-native'; import axios from 'axios';
+
+export default function ServersScreen() { const [servers, setServers] = useState([]);
+
+useEffect(() => { fetchServers(); }, []);
+
+const fetchServers = async () => { const res = await axios.get('https://api.nexuslifeops.com/servers'); setServers(res.data); }; const toggleSpot = async (id, useSpot) => { await axios.patch(https://api.nexuslifeops.com/servers/${id}, { useSpot }); fetchServers(); };
+
+return ( <View style={styles.container}> <Text style={styles.title}>Serveurs</Text> {servers.map(s => (<View key={s.id} style={styles.item}><Text>{s.name} - CPU: {s.cpuUsage}%</Text><View style={styles.switchRow}><Text>Spot</Text><Switch value={s.useSpot} onValueChange={val => toggleSpot(s.id, val)} /></View></View>))} </View> ); }
+
+const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, item: { marginVertical: 8 }, switchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 } });
+
+// AndroidManifest.xml (android/app/src/main/AndroidManifest.xml) <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.nexuslifeops"><application android:name=".MainApplication" android:label="Nexus Life Ops" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"><activity android:name="com.nexuslifeops.MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+
