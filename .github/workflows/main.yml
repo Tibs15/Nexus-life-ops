@@ -1,5 +1,4 @@
 name: Build Android APK
-
 on:
   push:
     branches:
@@ -13,7 +12,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up JDK 11
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Set up Java 11
         uses: actions/setup-java@v3
         with:
           distribution: temurin
@@ -24,3 +31,6 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleRelease
+
+      - name: Notify APK location
+        run: echo "APK généré: android/app/build/outputs/apk/release/app-release.apk"
