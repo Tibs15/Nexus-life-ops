@@ -1,11 +1,8 @@
-// .github/workflows/android.yml name: Build Android APK
+// File: .github/workflows/android.yml name: Build Android APK
 
-on: push: branches: [ main ]
+on: push: branches: - main
 
-jobs: build: name: Génération APK Release runs-on: ubuntu-latest
-
-env:
-  ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+jobs: build: name: Génération APK Release runs-on: ubuntu-latest env: ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
 
 steps:
   - name: Checkout repo
@@ -14,17 +11,18 @@ steps:
   - name: Set up JDK 11
     uses: actions/setup-java@v3
     with:
-      distribution: temurin
+      distribution: 'temurin'
       java-version: '11'
 
-  - name: Install Android SDK
+  - name: Install Android SDK command-line tools
     run: |
-      mkdir -p $ANDROID_SDK_ROOT
-      cd $ANDROID_SDK_ROOT
-      wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O tools.zip
-      unzip tools.zip -d cmdline-tools
-      rm tools.zip
-      yes | cmdline-tools/tools/bin/sdkmanager --sdk_root=${ANDROID_SDK_ROOT} \
+      mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+      cd "$ANDROID_SDK_ROOT/cmdline-tools"
+      wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+      unzip cmdline-tools.zip -d latest
+      rm cmdline-tools.zip
+      yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" \
+        --sdk_root="$ANDROID_SDK_ROOT" \
         "platform-tools" "platforms;android-31" "build-tools;31.0.0"
 
   - name: Cache Gradle
@@ -77,9 +75,20 @@ useEffect(() => { fetchTransfers(); }, []);
 
 const fetchTransfers = async () => { const res = await axios.get('https://api.nexuslifeops.com/transfers'); setTransfers(res.data); }; const createTransfer = async () => { await axios.post('https://api.nexuslifeops.com/transfers', { amount, iban }); fetchTransfers(); };
 
-return ( <View style={styles.container}> <Text style={styles.title}>Virements</Text> <TextInput style={styles.input} placeholder="Montant" value={amount} onChangeText={setAmount} keyboardType="numeric" /> <TextInput style={styles.input} placeholder="IBAN" value={iban} onChangeText={setIban} /> <Button title="Envoyer" onPress={createTransfer} /> <FlatList data={transfers} keyExtractor={item => item.id.toString()} renderItem={({ item }) => (<View style={styles.item}><Text>{item.date}: {item.amount} € - {item.status}</Text></View>)} /> </View> ); }
+return ( <View style={styles.container}> <Text style={styles.title}>Virements</Text> <TextInput
+style={styles.input}
+placeholder="Montant"
+value={amount}
+onChangeText={setAmount}
+keyboardType="numeric"
+/> <TextInput
+style={styles.input}
+placeholder="IBAN"
+value={iban}
+onChangeText={setIban}
+/> <Button title="Envoyer" onPress={createTransfer} /> <FlatList data={transfers} keyExtractor={item => item.id.toString()} renderItem={({ item }) => ( <View style={styles.item}> <Text>{item.date}: {item.amount} € - {item.status}</Text> </View> )} /> </View> ); }
 
-const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, input: { borderWidth: 1, padding: 8, marginVertical: 8, borderRadius: 4 }, item: { marginVertical: 8 } });
+const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, input: { borderWidth: 1, padding: 8, marginVertical: 8, borderRadius: 4 }, item: { marginVertical: 8 }, });
 
 // screens/CampaignsScreen.js import React, { useEffect, useState } from 'react'; import { View, Text, Button, StyleSheet, FlatList } from 'react-native'; import axios from 'axios';
 
@@ -89,7 +98,7 @@ useEffect(() => { fetchCampaigns(); }, []);
 
 const fetchCampaigns = async () => { const res = await axios.get('https://api.nexuslifeops.com/campaigns'); setCampaigns(res.data); }; const runCampaign = async (id) => { await axios.post(https://api.nexuslifeops.com/campaigns/${id}/run); fetchCampaigns(); };
 
-return ( <View style={styles.container}> <Text style={styles.title}>Campagnes</Text> <FlatList data={campaigns} keyExtractor={item => item.id.toString()} renderItem={({ item }) => (<View style={styles.item}><Text>{item.name} - Status: {item.status}</Text><Button title="Lancer" onPress={() => runCampaign(item.id)} /></View>)} /> </View> ); }
+return ( <View style={styles.container}> <Text style={styles.title}>Campagnes</Text> <FlatList data={campaigns} keyExtractor={item => item.id.toString()} renderItem={({ item }) => ( <View style={styles.item}> <Text>{item.name} - Status: {item.status}</Text> <Button title="Lancer" onPress={() => runCampaign(item.id)} /> </View> )} /> </View> ); }
 
 const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, item: { marginVertical: 8 } });
 
@@ -101,9 +110,9 @@ useEffect(() => { fetchServers(); }, []);
 
 const fetchServers = async () => { const res = await axios.get('https://api.nexuslifeops.com/servers'); setServers(res.data); }; const toggleSpot = async (id, useSpot) => { await axios.patch(https://api.nexuslifeops.com/servers/${id}, { useSpot }); fetchServers(); };
 
-return ( <View style={styles.container}> <Text style={styles.title}>Serveurs</Text> {servers.map(s => (<View key={s.id} style={styles.item}><Text>{s.name} - CPU: {s.cpuUsage}%</Text><View style={styles.switchRow}><Text>Spot</Text><Switch value={s.useSpot} onValueChange={val => toggleSpot(s.id, val)} /></View></View>))} </View> ); }
+return ( <View style={styles.container}> <Text style={styles.title}>Serveurs</Text> {servers.map(s => ( <View key={s.id} style={styles.item}> <Text>{s.name} - CPU: {s.cpuUsage}%</Text> <View style={styles.switchRow}> <Text>Spot</Text> <Switch value={s.useSpot} onValueChange={val => toggleSpot(s.id, val)} /> </View> </View> ))} </View> ); }
 
 const styles = StyleSheet.create({ container: { flex: 1, padding: 16 }, title: { fontSize: 22, marginBottom: 12 }, item: { marginVertical: 8 }, switchRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4 } });
 
-// AndroidManifest.xml (android/app/src/main/AndroidManifest.xml) <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.nexuslifeops"><application android:name=".MainApplication" android:label="Nexus Life Ops" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"><activity android:name="com.nexuslifeops.MainActivity" android:exported="true"><intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter></activity></application></manifest>
+// AndroidManifest.xml (android/app/src/main/AndroidManifest.xml) <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="com.nexuslifeops"> <application android:name=".MainApplication" android:label="Nexus Life Ops" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher_round"> <activity android:name="com.nexuslifeops.MainActivity" android:exported="true"> <intent-filter> <action android:name="android.intent.action.MAIN"/> <category android:name="android.intent.category.LAUNCHER"/> </intent-filter> </activity> </application> </manifest>
 
