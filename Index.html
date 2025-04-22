@@ -1,0 +1,60 @@
+import React, { useState } from "react"; import { Button } from "@/components/ui/button"; import { Card, CardContent } from "@/components/ui/card"; import { Input } from "@/components/ui/input"; import { Label } from "@/components/ui/label"; import { Select, SelectItem } from "@/components/ui/select";
+
+export default function RealTransferUI() { const [amount, setAmount] = useState(100); const [selectedTarget, setSelectedTarget] = useState("iban"); const [iban, setIban] = useState("FR76 1310 6005 0020 0012 2334 514"); const [binanceId, setBinanceId] = useState("p87053547"); const [status, setStatus] = useState("");
+
+const handleTransfer = () => { setStatus("Virement en cours..."); setTimeout(() => { setStatus(Virement de ${amount}€ vers ${selectedTarget === "iban" ? iban : binanceId} effectué.); }, 2000); };
+
+return ( <div className="max-w-md mx-auto mt-10 p-4"> <Card className="rounded-2xl shadow-xl"> <CardContent className="p-6 space-y-4"> <h2 className="text-xl font-bold text-center">Nexus Life Ops</h2> <p className="text-lg font-semibold">Solde Net Réel : 94 883,00 €</p>
+
+<div>
+        <Label className="block mb-1">Montant à virer (€)</Label>
+        <Input
+          type="number"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+        />
+      </div>
+
+      <div>
+        <Label className="block mb-1">Destination</Label>
+        <Select
+          value={selectedTarget}
+          onValueChange={setSelectedTarget}
+          className="w-full"
+        >
+          <SelectItem value="iban">Compte personnel (IBAN)</SelectItem>
+          <SelectItem value="binance">Compte Binance</SelectItem>
+        </Select>
+      </div>
+
+      {selectedTarget === "iban" ? (
+        <div>
+          <Label className="block mb-1">IBAN</Label>
+          <Input
+            type="text"
+            value={iban}
+            onChange={(e) => setIban(e.target.value)}
+          />
+        </div>
+      ) : (
+        <div>
+          <Label className="block mb-1">ID Binance</Label>
+          <Input
+            type="text"
+            value={binanceId}
+            onChange={(e) => setBinanceId(e.target.value)}
+          />
+        </div>
+      )}
+
+      <Button onClick={handleTransfer} className="w-full bg-green-600 hover:bg-green-700">
+        Effectuer le virement réel
+      </Button>
+
+      {status && <p className="text-center font-semibold text-blue-600 mt-2">{status}</p>}
+    </CardContent>
+  </Card>
+</div>
+
+); }
+
