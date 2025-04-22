@@ -1,27 +1,30 @@
-.github/workflows/android.yml
+GitHub Actions workflow for Nexus Life Ops Android APK
 
 name: Build Android APK
 
 on: push: branches: - main
 
-jobs: build: name: Génération APK Release runs-on: ubuntu-latest env: ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
+jobs: build: runs-on: ubuntu-latest
+
+env:
+  ANDROID_SDK_ROOT: ${{ github.workspace }}/android-sdk
 
 steps:
-  - name: Checkout repo
+  - name: Checkout repository
     uses: actions/checkout@v3
 
   - name: Set up JDK 11
     uses: actions/setup-java@v3
     with:
-      distribution: 'temurin'
+      distribution: temurin
       java-version: '11'
 
-  - name: Install Android SDK
+  - name: Install Android SDK command-line tools
     run: |
-      mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
-      cd "$ANDROID_SDK_ROOT/cmdline-tools"
-      wget https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
-      unzip cmdline-tools.zip -d latest
+      mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+      curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
+      unzip cmdline-tools.zip -d cmdline-tools
+      mv cmdline-tools/cmdline-tools latest
       rm cmdline-tools.zip
       yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_SDK_ROOT" \
         "platform-tools" "platforms;android-31" "build-tools;31.0.0"
@@ -37,10 +40,12 @@ steps:
         ${{ runner.os }}-gradle-
 
   - name: Install Node.js dependencies
-    run: npm install
+    run: npm ci
 
-  - name: Build Release APK
-    run: npx react-native run-android --variant=release
+  - name: Build Android Release
+    run: |
+      cd android
+      ./gradlew assembleRelease
 
   - name: Upload APK artifact
     uses: actions/upload-artifact@v3
