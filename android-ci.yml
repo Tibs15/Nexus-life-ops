@@ -1,0 +1,30 @@
+name: Android CI (manuel)
+
+# On ne déclenche PAS sur push, mais via bouton "Run workflow"
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - run: npm ci
+
+      - uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
+
+      - run: echo "APK généré → android/app/build/outputs/apk/release/app-release.apk"
