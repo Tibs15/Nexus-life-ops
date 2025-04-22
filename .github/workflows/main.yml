@@ -1,5 +1,3 @@
-Workflow GitHub Actions pour construire l’APK Android
-
 name: Build Android APK on: push: branches: - main
 
 jobs: build: runs-on: ubuntu-latest
