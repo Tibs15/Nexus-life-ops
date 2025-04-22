@@ -26,4 +26,5 @@ jobs:
           cd android
           chmod +x ./gradlew
           ./gradlew assembleRelease
-      - run: echo "APK généré : android/app/build/outputs/apk/release/app-release.apk"
+
+      - run: echo "APK généré : android/app/build/outputs/apk/release/app-release.apk"
