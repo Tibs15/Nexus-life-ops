@@ -19,8 +19,7 @@ jobs:
           distribution: temurin
           java-version: '11'
 
-      - name: Installer le SDK Android
-        run: |
+      - run: |
           mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools/latest"
           curl -o cmdline-tools.zip https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
           unzip cmdline-tools.zip -d cmdline-tools
@@ -44,7 +43,7 @@ jobs:
           cd android
           ./gradlew assembleRelease
 
-      - uses: actions/upload-artifact@v3.1.2
+      - uses: actions/upload-artifact@v2.3.0
         with:
           name: app-release.apk
           path: android/app/build/outputs/apk/release/app-release.apk
