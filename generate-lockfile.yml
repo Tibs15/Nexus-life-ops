@@ -1,0 +1,33 @@
+name: Générer et Commit package-lock.json
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:  # permet de le lancer manuellement depuis l’UI
+
+jobs:
+  regen-lockfile:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+
+      - name: Install dependencies and generate lockfile
+        run: |
+          cd nexus-life-ops
+          npm install
+
+      - name: Commit lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add nexus-life-ops/package-lock.json
+          git commit -m "chore: auto-generate package-lock.json" || echo "No changes"
+          git push
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
