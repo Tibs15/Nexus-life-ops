@@ -1,33 +1,41 @@
-name: Générer et Commit package-lock.json
+name: Build Android APK
 
 on:
   push:
-    branches: [ main ]
-  workflow_dispatch:  # permet de le lancer manuellement depuis l’UI
+    branches:
+      - main
 
 jobs:
-  regen-lockfile:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16'
 
-      - name: Install dependencies and generate lockfile
-        run: |
-          cd nexus-life-ops
-          npm install
+      - name: Install JS dependencies
+        working-directory: nexus-life-ops
+        run: npm install
 
-      - name: Commit lockfile
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '11'
+
+      - name: Build Android release
+        working-directory: nexus-life-ops/android
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add nexus-life-ops/package-lock.json
-          git commit -m "chore: auto-generate package-lock.json" || echo "No changes"
-          git push
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          chmod +x gradlew
+          ./gradlew assembleRelease
+
+      - name: Upload Release APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release.apk
+          path: nexus-life-ops/android/app/build/outputs/apk/release/app-release.apk
