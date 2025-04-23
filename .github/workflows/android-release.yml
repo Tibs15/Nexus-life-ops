@@ -1,52 +1,55 @@
 name: Build & Release Android APK
 
-on: push: branches: [ main ]
+on:
+  push:
+    branches:
+      - main
 
-jobs: build: runs-on: ubuntu-latest
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-# Toutes les commandes s'exécutent dans le dossier de votre projet React Native
-defaults:
-  run:
-    working-directory: nexus-life-ops
+    defaults:
+      run:
+        working-directory: nexus-life-ops
 
-steps:
-  - name: Checkout repository
-    uses: actions/checkout@v3
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-  - name: Setup Node.js
-    uses: actions/setup-node@v3
-    with:
-      node-version: '16'
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
 
-  - name: Install dependencies
-    run: npm install
+      - name: Install dependencies
+        run: npm install
 
-  - name: Setup Java
-    uses: actions/setup-java@v3
-    with:
-      distribution: temurin
-      java-version: '11'
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: '11'
 
-  - name: Build Release APK
-    run: |
-      cd android
-      chmod +x ./gradlew
-      ./gradlew assembleRelease
+      - name: Build Release APK
+        run: |
+          cd android
+          chmod +x ./gradlew
+          ./gradlew assembleRelease
 
-  - id: create_release
-    name: Create GitHub Release
-    uses: actions/create-release@v1
-    with:
-      tag_name: android-build-${{ github.run_number }}
-      release_name: APK build #${{ github.run_number }}
-      draft: false
-      prerelease: false
+      - id: create_release
+        name: Create GitHub Release
+        uses: actions/create-release@v1
+        with:
+          tag_name: android-build-${{ github.run_number }}
+          release_name: APK build #${{ github.run_number }}
+          draft: false
+          prerelease: false
 
-  - name: Upload APK to Release
-    uses: actions/upload-release-asset@v1
-    with:
-      upload_url: ${{ steps.create_release.outputs.upload_url }}
-      asset_path: android/app/build/outputs/apk/release/app-release.apk
-      asset_name: app-release.apk
-      asset_content_type: application/vnd.android.package-archive
-
+      - name: Upload APK to Release
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: android/app/build/outputs/apk/release/app-release.apk
+          asset_name: app-release.apk
+          asset_content_type: application/vnd.android.package-archive
